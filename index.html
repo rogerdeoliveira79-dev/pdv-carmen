@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff6900">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Carmen PDV</title>
+<style>
+:root{--orange:#ff6900;--bg:#fff8f1;--ink:#242424;--muted:#91877f;--line:#eee4dc;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink);padding-bottom:82px}
+header{height:74px;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:25px;font-weight:800;position:sticky;top:0;z-index:5}
+header small{font-size:12px;font-weight:500;display:block;opacity:.9;margin-top:3px}
+main{max-width:900px;margin:auto;padding:20px 16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:28px;padding:22px;margin:18px 0;box-shadow:0 2px 5px #00000005}
+.empty{text-align:center;padding:70px 12px}.empty .emoji{font-size:65px;background:#fff0e5;border-radius:30px;width:125px;height:125px;display:grid;place-items:center;margin:0 auto 28px}
+h2{font-size:24px;margin:0 0 10px}p{color:var(--muted);line-height:1.5;margin:8px 0 24px}
+button{border:0;border-radius:30px;background:var(--orange);color:white;font-weight:700;padding:15px 22px;font-size:15px;cursor:pointer}
+button.secondary{background:#fff0e5;color:var(--orange)}button.ghost{background:#f4f0ec;color:#554d47}button.danger{background:#fff0f0;color:#c43b32}
+.fab{position:fixed;right:22px;bottom:100px;width:64px;height:64px;border-radius:50%;font-size:30px;padding:0;box-shadow:0 8px 25px #ff690044;z-index:4}
+nav{position:fixed;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+nav button{background:transparent;color:#9b928b;border-radius:0;padding:8px 2px;flex:1;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
+nav button.active{color:var(--orange);border-top:4px solid var(--orange);padding-top:4px}
+nav .ico{font-size:21px}
+input,select{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;font-size:16px;background:white;margin:6px 0 14px;color:var(--ink)}
+label{font-size:13px;font-weight:700;color:#665d56}
+.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}
+.item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f1ebe6}
+.item:last-child{border:0}.item strong{display:block}.sub{font-size:12px;color:var(--muted);margin-top:4px}
+.price{font-weight:800;color:var(--orange);white-space:nowrap}
+.search{margin-bottom:10px}
+.total{font-size:22px;font-weight:800;display:flex;justify-content:space-between;margin:18px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}
+.hidden{display:none!important}
+h3{margin:0 0 12px}
+.modal{position:fixed;inset:0;background:#0007;z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.modalbox{background:#fff;width:100%;max-width:600px;border-radius:25px 25px 0 0;padding:24px;max-height:92vh;overflow:auto}
+.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.toast{position:fixed;top:85px;left:50%;transform:translateX(-50%);background:#242424;color:#fff;padding:12px 18px;border-radius:30px;z-index:20;font-size:14px}
+.small{font-size:12px;color:var(--muted)}
+@media(min-width:700px){main{padding:28px}.modal{align-items:center}.modalbox{border-radius:24px}.fab{bottom:105px}}
+</style>
+</head>
+<body>
+<header><div>Carmen<small>PDV • Vendas e Estoque</small></div><div style="background:#ffffff33;border-radius:50%;width:42px;height:42px;display:grid;place-items:center;font-size:16px">C</div></header>
+<main>
+<section id="products">
+<div id="emptyProducts" class="panel empty"><div class="emoji">📦</div><h2>Nenhum produto cadastrado</h2><p>Seu catálogo está vazio. Cadastre seu primeiro produto para começar a vender.</p><button onclick="openProduct()">Cadastrar primeiro produto</button></div>
+<div id="productList" class="panel hidden"><input class="search" id="productSearch" placeholder="🔎 Buscar produto..." oninput="renderProducts()"><div id="productsRows"></div></div>
+</section>
+<section id="cart" class="hidden">
+<div class="panel"><h2>🛒 Carrinho</h2><input id="cartSearch" placeholder="Buscar produto para adicionar..." oninput="renderCartSearch()"><div id="cartSearchRows"></div><h3 style="margin-top:20px">Itens da venda</h3><div id="cartRows"><p>Seu carrinho está vazio.</p></div><div class="total"><span>Total</span><span id="cartTotal">R$ 0,00</span></div><button style="width:100%" onclick="openCheckout()">Finalizar venda</button></div>
+</section>
+<section id="stock" class="hidden"><div class="panel"><h2>📋 Estoque</h2><p>Quantidade disponível de cada produto.</p><div id="stockRows"></div></div></section>
+<section id="history" class="hidden"><div class="panel"><h2>🧾 Histórico de vendas</h2><div id="historyRows"><p>Nenhuma venda realizada.</p></div></div></section>
+</main>
+<button class="fab" id="fab" onclick="openProduct()">+</button>
+<nav>
+<button class="active" data-tab="products" onclick="tab('products',this)"><span class="ico">◧</span>Produtos</button>
+<button data-tab="cart" onclick="tab('cart',this)"><span class="ico">◩</span>Carrinho</button>
+<button data-tab="stock" onclick="tab('stock',this)"><span class="ico">▤</span>Estoque</button>
+<button data-tab="history" onclick="tab('history',this)"><span class="ico">◫</span>Histórico</button>
+</nav>
+<div id="modal" class="modal hidden"><div class="modalbox"><div class="modalhead"><h2 id="modalTitle">Cadastrar produto</h2><button class="ghost" onclick="closeModal()">✕</button></div><div id="modalBody"></div></div></div>
+<script>
+const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+let products=JSON.parse(localStorage.getItem('carmen_products')||'[]');
+let sales=JSON.parse(localStorage.getItem('carmen_sales')||'[]');
+let cart=[];
+const save=()=>{localStorage.setItem('carmen_products',JSON.stringify(products));localStorage.setItem('carmen_sales',JSON.stringify(sales));};
+function toast(t){let x=document.createElement('div');x.className='toast';x.textContent=t;document.body.append(x);setTimeout(()=>x.remove(),2200)}
+function tab(id,btn){document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('fab').classList.toggle('hidden',id!=='products');if(id==='products')renderProducts();if(id==='stock')renderStock();if(id==='history')renderHistory();if(id==='cart')renderCart()}
+function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').classList.remove('hidden')}
+function closeModal(){document.getElementById('modal').classList.add('hidden')}
+function openProduct(){openModal('Cadastrar produto',`<form onsubmit="addProduct(event)"><label>Nome do produto</label><input id="pname" required placeholder="Ex.: Café 500g"><div class="row"><div><label>Preço de compra (R$)</label><input id="pcost" type="number" min="0" step=".01" value="0"></div><div><label>Preço de venda (R$)</label><input id="pprice" type="number" min=".01" step=".01" required placeholder="0,00"></div></div><label>Quantidade inicial</label><input id="pqty" type="number" min="0" step="1" value="0" required><label>Código (opcional)</label><input id="pcode" placeholder="Código ou referência"><button style="width:100%">Salvar produto</button></form>`)}
+function addProduct(e){e.preventDefault();products.push({id:Date.now(),name:pname.value.trim(),cost:+pcost.value||0,price:+pprice.value,qty:+pqty.value||0,code:pcode.value.trim()});save();closeModal();renderProducts();toast('Produto cadastrado!')}
+function renderProducts(){let q=(document.getElementById('productSearch')?.value||'').toLowerCase();let arr=products.filter(p=>p.name.toLowerCase().includes(q)||(p.code||'').toLowerCase().includes(q));document.getElementById('emptyProducts').classList.toggle('hidden',products.length>0);document.getElementById('productList').classList.toggle('hidden',products.length===0);document.getElementById('productsRows').innerHTML=arr.map(p=>`<div class="item"><div><strong>${esc(p.name)}</strong><div class="sub">Estoque: ${p.qty} ${p.code?' • '+esc(p.code):''}</div></div><div style="text-align:right"><div class="price">${money(p.price)}</div><button class="secondary" style="padding:8px 12px;margin-top:6px" onclick="editProduct(${p.id})">Editar</button></div></div>`).join('')||'<p>Nenhum produto encontrado.</p>'}
+function editProduct(id){let p=products.find(x=>x.id===id);openModal('Editar produto',`<form onsubmit="updateProduct(event,${id})"><label>Nome</label><input id="ename" required value="${esc(p.name)}"><div class="row"><div><label>Preço de compra</label><input id="ecost" type="number" step=".01" value="${p.cost}"></div><div><label>Preço de venda</label><input id="eprice" type="number" step=".01" value="${p.price}" required></div></div><label>Quantidade em estoque</label><input id="eqty" type="number" min="0" value="${p.qty}" required><label>Código</label><input id="ecode" value="${esc(p.code||'')}"><div class="actions"><button>Salvar alterações</button><button type="button" class="danger" onclick="deleteProduct(${id})">Excluir</button></div></form>`)}
+function updateProduct(e,id){e.preventDefault();let p=products.find(x=>x.id===id);Object.assign(p,{name:ename.value.trim(),cost:+ecost.value||0,price:+eprice.value,qty:+eqty.value,code:ecode.value.trim()});save();closeModal();renderProducts();toast('Produto atualizado!')}
+function deleteProduct(id){if(confirm('Excluir este produto?')){products=products.filter(p=>p.id!==id);save();closeModal();renderProducts();toast('Produto excluído.')}}
+function renderCartSearch(){let q=(cartSearch.value||'').toLowerCase();let a=products.filter(p=>p.name.toLowerCase().includes(q)&&p.qty>0);cartSearchRows.innerHTML=q?a.map(p=>`<div class="item"><div><strong>${esc(p.name)}</strong><div class="sub">${p.qty} disponíveis • ${money(p.price)}</div></div><button onclick="addCart(${p.id})">Adicionar</button></div>`).join(''):'<p class="small">Digite para localizar produtos.</p>'}
+function addCart(id){let p=products.find(x=>x.id===id),c=cart.find(x=>x.id===id);let qty=c?c.qty:0;if(qty>=p.qty){toast('Estoque insuficiente.');return}if(c)c.qty++;else cart.push({id,qty:1});renderCart();toast('Adicionado ao carrinho.')}
+function renderCart(){renderCartSearch();cartRows.innerHTML=cart.length?cart.map(c=>{let p=products.find(x=>x.id===c.id);return `<div class="item"><div><strong>${esc(p.name)}</strong><div class="sub">${money(p.price)} cada</div></div><div class="row" style="max-width:150px"><button class="secondary" onclick="changeQty(${p.id},-1)">−</button><strong style="text-align:center">${c.qty}</strong><button class="secondary" onclick="changeQty(${p.id},1)">+</button></div><strong>${money(p.price*c.qty)}</strong></div>`}).join(''):'<p>Seu carrinho está vazio.</p>';cartTotal.textContent=money(cart.reduce((s,c)=>s+products.find(p=>p.id===c.id).price*c.qty,0))}
+function changeQty(id,d){let c=cart.find(x=>x.id===id),p=products.find(x=>x.id===id);c.qty+=d;if(c.qty>p.qty){c.qty=p.qty;toast('Estoque insuficiente.')}if(c.qty<=0)cart=cart.filter(x=>x.id!==id);renderCart()}
+function openCheckout(){if(!cart.length){toast('Adicione produtos ao carrinho.');return}let total=cart.reduce((s,c)=>s+products.find(p=>p.id===c.id).price*c.qty,0);openModal('Finalizar venda',`<form onsubmit="finishSale(event)"><label>Nome do cliente (opcional)</label><input id="customer" placeholder="Nome do cliente"><label>WhatsApp com DDD (opcional)</label><input id="phone" type="tel" placeholder="Ex.: 51999999999"><label>Forma de pagamento</label><select id="payment"><option>Dinheiro</option><option>Pix</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>Outro</option></select><div class="total"><span>Total</span><span>${money(total)}</span></div><button style="width:100%">Confirmar venda</button></form>`)}
+function finishSale(e){e.preventDefault();for(let c of cart){let p=products.find(x=>x.id===c.id);if(!p||p.qty<c.qty){toast('Estoque alterado. Confira o carrinho.');return}}let items=cart.map(c=>{let p=products.find(x=>x.id===c.id);p.qty-=c.qty;return {name:p.name,qty:c.qty,price:p.price}});let sale={id:Date.now(),date:new Date().toISOString(),customer:customer.value.trim(),phone:phone.value.trim(),payment:payment.value,items,total:items.reduce((s,x)=>s+x.qty*x.price,0)};sales.unshift(sale);cart=[];save();closeModal();renderCart();renderStock();renderHistory();toast('Venda registrada com sucesso!');if(sale.phone&&confirm('Venda registrada. Deseja enviar o comprovante pelo WhatsApp?'))sendWhatsApp(sale)}
+function receipt(s){return `*CARMEN - COMPROVANTE DE VENDA*%0A${new Date(s.date).toLocaleString('pt-BR')}%0ACliente: ${encodeURIComponent(s.customer||'Não informado')}%0A%0A${s.items.map(i=>`${encodeURIComponent(i.name)} - ${i.qty} x ${encodeURIComponent(money(i.price))} = ${encodeURIComponent(money(i.qty*i.price))}`).join('%0A')}%0A%0A*TOTAL: ${encodeURIComponent(money(s.total))}*%0APagamento: ${encodeURIComponent(s.payment)}%0AObrigado pela preferência!`}
+function sendWhatsApp(s){let n=s.phone.replace(/\D/g,'');if(n.length>=10&&!n.startsWith('55'))n='55'+n;window.open(`https://wa.me/${n}?text=${receipt(s)}`,'_blank')}
+function renderStock(){stockRows.innerHTML=products.length?products.map(p=>`<div class="item"><div><strong>${esc(p.name)}</strong><div class="sub">${p.qty<=5?'⚠️ Estoque baixo':'Disponível'}</div></div><strong>${p.qty} un.</strong></div>`).join(''):'<p>Nenhum produto cadastrado.</p>'}
+function renderHistory(){historyRows.innerHTML=sales.length?sales.map(s=>`<div class="item"><div><strong>Venda #${s.id.toString().slice(-6)}</strong><div class="sub">${new Date(s.date).toLocaleString('pt-BR')} • ${esc(s.customer||'Cliente não informado')} • ${esc(s.payment)}</div><div class="sub">${s.items.map(i=>`${i.qty}x ${esc(i.name)}`).join(', ')}</div></div><div style="text-align:right"><div class="price">${money(s.total)}</div>${s.phone?`<button class="secondary" style="padding:8px 10px;margin-top:6px" onclick="sendWhatsApp(sales.find(x=>x.id===${s.id}))">WhatsApp</button>`:''}</div></div>`).join(''):'<p>Nenhuma venda realizada.</p>'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+renderProducts();
+if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+</script>
+</body></html>

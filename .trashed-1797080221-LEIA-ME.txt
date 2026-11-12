@@ -1,0 +1,17 @@
+PDV CARMEN - PROJETO ANDROID
+
+Este projeto transforma o PDV web em um aplicativo Android instalado no aparelho.
+Os arquivos do PDV ficam dentro do APK e abrem localmente, sem precisar de navegador ou internet.
+O envio de comprovantes pelo WhatsApp exige internet e o WhatsApp instalado.
+
+COMO GERAR O APK PELO CELULAR:
+1. Extraia o ZIP.
+2. No GitHub, crie um repositório novo.
+3. Envie TODOS os arquivos e pastas que estão dentro de PDV_Carmen_Android (não envie a pasta externa como uma única pasta compactada).
+4. Abra a aba Actions do repositório.
+5. Se aparecer a confirmação, habilite GitHub Actions.
+6. Execute "Gerar APK Carmen" em Run workflow (ou aguarde o envio terminar).
+7. Abra a execução concluída e baixe o artefato "PDV-Carmen-APK".
+8. Extraia o ZIP baixado e instale app-debug.apk no Android.
+
+Este é um APK de depuração (debug), instalável para teste. Para distribuição pública, será necessária assinatura de lançamento.

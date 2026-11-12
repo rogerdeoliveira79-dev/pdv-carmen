@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#123b32">
+<title>Meu Estoque e Vendas</title>
+<style>
+:root{--green:#123b32;--lime:#c9ed76;--bg:#f3f6f3;--card:#fff;--muted:#66736d;--line:#e1e8e3}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,Arial;color:#18231e}
+header{background:var(--green);color:white;padding:20px 18px 16px;position:sticky;top:0;z-index:3}
+header h1{font-size:21px;margin:0}header p{margin:4px 0 0;color:#d4e5dc;font-size:12px}
+nav{display:flex;gap:7px;overflow:auto;padding:10px;background:white;position:sticky;top:77px;z-index:2;border-bottom:1px solid var(--line)}
+nav button{border:0;background:#edf3ef;color:#294238;padding:10px 13px;border-radius:22px;white-space:nowrap;font-weight:650}
+nav button.active{background:var(--green);color:white}
+main{padding:15px;max-width:760px;margin:auto}.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:11px}
+.stat small{color:var(--muted)}.stat strong{display:block;font-size:23px;margin-top:5px}
+h2{font-size:18px;margin:7px 0 13px}.muted{color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;color:#42534a;margin:10px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid #ccd8d0;border-radius:10px;background:white;font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn{border:0;border-radius:11px;padding:12px 15px;background:var(--green);color:white;font-weight:700;margin-top:12px;width:100%}
+.btn.alt{background:#e8f0eb;color:var(--green)}.btn.danger{background:#9f302c}
+.item{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:11px 0}.item:last-child{border:0}
+.item strong{display:block}.item small{color:var(--muted)}
+.pill{font-size:11px;background:#edf4e8;padding:4px 8px;border-radius:20px}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+footer{text-align:center;padding:20px;color:var(--muted);font-size:11px}
+</style></head>
+<body>
+<header><h1>Meu Estoque e Vendas</h1><p>Controle simples da sua loja • dados salvos neste aparelho</p></header>
+<nav>
+<button class="active" data-tab="inicio">Início</button><button data-tab="produtos">Produtos</button><button data-tab="venda">Nova venda</button><button data-tab="historico">Vendas</button>
+</nav>
+<main>
+<section id="inicio" class="panel active">
+<div class="grid">
+<div class="stat"><small>Vendas de hoje</small><strong id="todayTotal">R$ 0,00</strong></div>
+<div class="stat"><small>Produtos cadastrados</small><strong id="productCount">0</strong></div>
+<div class="stat"><small>Itens em estoque</small><strong id="stockCount">0</strong></div>
+<div class="stat"><small>Valor vendido total</small><strong id="allTotal">R$ 0,00</strong></div>
+</div>
+<div class="card"><h2>Bem-vindo!</h2><p class="muted">Cadastre seus produtos, registre as vendas e envie o comprovante ao cliente pelo WhatsApp. O cadastro e as vendas funcionam sem internet. O WhatsApp precisa de conexão.</p></div>
+</section>
+<section id="produtos" class="panel">
+<h2>Cadastro de produtos</h2>
+<div class="card">
+<label>Nome do produto</label><input id="pname" placeholder="Ex.: Arroz 5 kg">
+<div class="row"><div><label>Preço de venda (R$)</label><input id="pprice" type="number" min="0" step=".01" placeholder="0,00"></div><div><label>Quantidade em estoque</label><input id="pqty" type="number" min="0" step="1" placeholder="0"></div></div>
+<button class="btn" onclick="addProduct()">Salvar produto</button>
+</div>
+<div class="card"><h2>Produtos cadastrados</h2><div id="productList" class="muted">Nenhum produto cadastrado.</div></div>
+</section>
+<section id="venda" class="panel">
+<h2>Registrar venda</h2>
+<div class="card">
+<label>Produto</label><select id="saleProduct"><option value="">Selecione um produto</option></select>
+<div class="row"><div><label>Quantidade</label><input id="saleQty" type="number" min="1" step="1" value="1"></div><div><label>Telefone WhatsApp do cliente</label><input id="customerPhone" inputmode="tel" placeholder="DDD + número"></div></div>
+<label>Nome do cliente (opcional)</label><input id="customerName" placeholder="Nome do cliente">
+<button class="btn" onclick="completeSale()">Finalizar venda e gerar comprovante</button>
+<p class="muted">A quantidade será descontada automaticamente do estoque.</p>
+</div>
+</section>
+<section id="historico" class="panel">
+<h2>Histórico de vendas</h2><div class="card" id="salesList"><div class="empty">Nenhuma venda registrada.</div></div>
+<button class="btn alt" onclick="exportData()">Exportar backup dos dados</button>
+</section>
+</main><footer>Versão inicial • uso local neste aparelho</footer>
+<script>
+const get=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+let products=get('mev_products'),sales=get('mev_sales');
+const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const save=()=>{localStorage.setItem('mev_products',JSON.stringify(products));localStorage.setItem('mev_sales',JSON.stringify(sales));render()};
+function addProduct(){let name=document.getElementById('pname').value.trim(),price=Number(document.getElementById('pprice').value),qty=parseInt(document.getElementById('pqty').value,10);
+if(!name||price<0||!Number.isFinite(price)||!Number.isInteger(qty)||qty<0){alert('Preencha nome, preço e quantidade corretamente.');return}
+products.push({id:Date.now(),name,price,qty});document.getElementById('pname').value='';document.getElementById('pprice').value='';document.getElementById('pqty').value='';save()}
+function removeProduct(id){if(confirm('Excluir este produto?')){products=products.filter(p=>p.id!==id);save()}}
+function completeSale(){let id=Number(document.getElementById('saleProduct').value),qty=parseInt(document.getElementById('saleQty').value,10),p=products.find(x=>x.id===id);
+if(!p||!Number.isInteger(qty)||qty<1){alert('Selecione um produto e uma quantidade válida.');return}
+if(qty>p.qty){alert('Estoque insuficiente. Disponível: '+p.qty);return}
+let sale={id:Date.now(),product:p.name,qty,unit:p.price,total:p.price*qty,customer:document.getElementById('customerName').value.trim(),phone:document.getElementById('customerPhone').value.trim(),date:new Date().toISOString()};p.qty-=qty;sales.unshift(sale);save();
+let msg=`COMPROVANTE DE VENDA\nMeu Estoque e Vendas\nProduto: ${sale.product}\nQuantidade: ${qty}\nValor unitário: ${money(sale.unit)}\nTOTAL: ${money(sale.total)}\nData: ${new Date(sale.date).toLocaleString('pt-BR')}\nObrigado pela preferência!`;
+if(sale.phone){let phone=sale.phone.replace(/\D/g,'');if(phone.length>=10){if(!phone.startsWith('55'))phone='55'+phone;window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank')}else alert('Venda salva. Confira o telefone para abrir o WhatsApp.')}
+else if(confirm('Venda salva! Deseja copiar o comprovante para enviar ao cliente?'))navigator.clipboard?.writeText(msg);
+document.getElementById('saleQty').value=1;document.getElementById('customerPhone').value='';document.getElementById('customerName').value='';}
+function render(){document.getElementById('productCount').textContent=products.length;document.getElementById('stockCount').textContent=products.reduce((a,p)=>a+p.qty,0);let today=new Date().toDateString();document.getElementById('todayTotal').textContent=money(sales.filter(s=>new Date(s.date).toDateString()===today).reduce((a,s)=>a+s.total,0));document.getElementById('allTotal').textContent=money(sales.reduce((a,s)=>a+s.total,0));
+document.getElementById('productList').innerHTML=products.length?products.map(p=>`<div class="item"><div><strong>${esc(p.name)}</strong><small>${money(p.price)} • Estoque: ${p.qty}</small></div><button class="btn danger" style="width:auto;margin:0;padding:8px 10px" onclick="removeProduct(${p.id})">Excluir</button></div>`).join(''):'<div class="empty">Nenhum produto cadastrado.</div>';
+document.getElementById('saleProduct').innerHTML='<option value="">Selecione um produto</option>'+products.filter(p=>p.qty>0).map(p=>`<option value="${p.id}">${esc(p.name)} — ${money(p.price)} (estoque ${p.qty})</option>`).join('');
+document.getElementById('salesList').innerHTML=sales.length?sales.map(s=>`<div class="item"><div><strong>${esc(s.product)} × ${s.qty}</strong><small>${new Date(s.date).toLocaleString('pt-BR')} ${s.customer?' • '+esc(s.customer):''}</small></div><strong>${money(s.total)}</strong></div>`).join(''):'<div class="empty">Nenhuma venda registrada.</div>'}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function exportData(){let blob=new Blob([JSON.stringify({products,sales},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-meu-estoque-vendas.json';a.click();URL.revokeObjectURL(a.href)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
+render();
+</script></body></html>
